@@ -156,7 +156,7 @@ export default function AdminDashboard(){
 
   if(!isSignedIn) {
     return (
-      <div className="bg-slate-50 min-h-screen p-8">
+      <div className="bg-slate-50 p-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <h2 className="text-2xl font-semibold text-slate-900">Admin Access Required</h2>
@@ -168,7 +168,7 @@ export default function AdminDashboard(){
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col">
+    <div className="bg-slate-50 flex flex-col">
       <Navbar showProfile={true} />
       <div className="flex-1 p-4 md:p-8">
         <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">

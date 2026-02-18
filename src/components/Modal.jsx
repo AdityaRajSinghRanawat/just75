@@ -1,6 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 
+function toDateInputValue(value){
+  if(!value) return '';
+  if(typeof value === 'string'){
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+  const d = new Date(value);
+  const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const y = local.getFullYear();
+  const m = String(local.getMonth() + 1).padStart(2, '0');
+  const day = String(local.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export default function Modal({ isOpen, title, onClose, children }){
   if(!isOpen) return null;
   return (
@@ -25,11 +39,8 @@ export function AddHolidayModal({ isOpen, onClose, onSubmit, initialData }){
   useEffect(() => {
     if(initialData && isOpen){
       setName(initialData.name || '');
-      // Convert date to YYYY-MM-DD format for input
-      const start = new Date(initialData.startDate);
-      const end = new Date(initialData.endDate);
-      setStartDate(start.toISOString().split('T')[0]);
-      setEndDate(end.toISOString().split('T')[0]);
+      setStartDate(toDateInputValue(initialData.startDate));
+      setEndDate(toDateInputValue(initialData.endDate));
     } else if(!isOpen){
       // Clear when modal closes
       setName('');
@@ -110,10 +121,8 @@ export function AddSemesterModal({ isOpen, onClose, onSubmit, initialData }){
   useEffect(() => {
     if(initialData && isOpen){
       setName(initialData.name || '');
-      const m1 = initialData.mid1Date ? new Date(initialData.mid1Date) : null;
-      const m2 = initialData.mid2Date ? new Date(initialData.mid2Date) : null;
-      setMid1Date(m1 ? m1.toISOString().split('T')[0] : '');
-      setMid2Date(m2 ? m2.toISOString().split('T')[0] : '');
+      setMid1Date(toDateInputValue(initialData.mid1Date));
+      setMid2Date(toDateInputValue(initialData.mid2Date));
     } else if(!isOpen){
       setName('');
       setMid1Date('');

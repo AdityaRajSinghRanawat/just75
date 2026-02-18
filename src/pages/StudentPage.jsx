@@ -9,6 +9,29 @@ function toTitleCase(str){
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
+function toLocalDateInputValue(date = new Date()){
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function normalizeCalendarDate(value){
+  if(value instanceof Date){
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  if(typeof value === 'string'){
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  }
+  const d = new Date(value);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function formatCalendarDisplay(value){
+  return normalizeCalendarDate(value).toLocaleDateString();
+}
+
 export default function StudentPage(){
   const [semesters, setSemesters] = useState([]);
   const [holidays, setHolidays] = useState([]);
@@ -29,15 +52,15 @@ export default function StudentPage(){
   const periodsPerDay = 6;
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateInputValue();
     if(!startDate){
       setStartDate(today);
     }
   }, [startDate]);
 
   function calculateDays(start, end){
-    const d1 = new Date(start);
-    const d2 = new Date(end);
+    const d1 = normalizeCalendarDate(start);
+    const d2 = normalizeCalendarDate(end);
     return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
   }
 
@@ -52,31 +75,31 @@ export default function StudentPage(){
       }
       return;
     }
-    fetchHolidays(semesterId).then(setHolidays).catch(()=>setHolidays([]));
-  }, [semesterId, holidays.length]);
+    fetchHolidays().then(setHolidays).catch(()=>setHolidays([]));
+  }, [semesterId]);
 
   useEffect(() => {
     if(!semesterId || !semesters.length || !startDate || hasCustomEndDate) return;
     const semester = semesters.find(s => s._id === semesterId);
     if(!semester) return;
-    const today = new Date(startDate);
+    const today = normalizeCalendarDate(startDate);
     let defaultEndDate = null;
     if(semester.mid1Date){
-      const mid1 = new Date(semester.mid1Date);
+      const mid1 = normalizeCalendarDate(semester.mid1Date);
       if(mid1 >= today){
-        defaultEndDate = semester.mid1Date;
+        defaultEndDate = toLocalDateInputValue(mid1);
       }
     }
     if(!defaultEndDate && semester.mid2Date){
-      const mid2 = new Date(semester.mid2Date);
+      const mid2 = normalizeCalendarDate(semester.mid2Date);
       if(mid2 >= today){
-        defaultEndDate = semester.mid2Date;
+        defaultEndDate = toLocalDateInputValue(mid2);
       }
     }
     if(!defaultEndDate){
-      const nextMonth = new Date(today);
+      const nextMonth = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       nextMonth.setMonth(nextMonth.getMonth() + 1);
-      defaultEndDate = nextMonth.toISOString().split('T')[0];
+      defaultEndDate = toLocalDateInputValue(nextMonth);
     }
     setEndDate(defaultEndDate);
   }, [semesterId, semesters, startDate, hasCustomEndDate]);
@@ -89,11 +112,11 @@ export default function StudentPage(){
 
   function getFilteredHolidays(){
     if(!startDate || !endDate) return [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = normalizeCalendarDate(startDate);
+    const end = normalizeCalendarDate(endDate);
     return holidays.filter(h=>{
-      const hStart = new Date(h.startDate);
-      const hEnd = new Date(h.endDate);
+      const hStart = normalizeCalendarDate(h.startDate);
+      const hEnd = normalizeCalendarDate(h.endDate);
       return hStart <= end && hEnd >= start;
     });
   }
@@ -107,8 +130,8 @@ export default function StudentPage(){
     const extraWorkArray = extraWorkingDays.map(w => ({ startDate: w.startDate, endDate: w.endDate }));
     
     const net = calculateNetWorkingDays({
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate,
+      endDate,
       officialHolidays: filteredHolidays,
       extraHolidays: extraHolArray,
       extraWorkingDays: extraWorkArray
@@ -178,22 +201,24 @@ export default function StudentPage(){
                     onChange={e => { setEndDate(e.target.value); setHasCustomEndDate(true); }}
                     onFocus={e => e.target.showPicker?.()}
                   />
+                  <p className="text-xs text-slate-500 mt-1">End date is excluded from the calculation window.</p>
                   
                   {semesterId && semesters.length > 0 && (() => {
                     const semester = semesters.find(s => s._id === semesterId);
-                    const today = new Date(startDate);
+                    const today = normalizeCalendarDate(startDate);
                     
                     // Helper to format date as YYYY-MM-DD
                     const formatDate = (dateStr) => {
                       if (!dateStr) return null;
-                      const d = new Date(dateStr);
-                      return d.toISOString().split('T')[0];
+                      const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                      if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+                      return toLocalDateInputValue(new Date(dateStr));
                     };
                     
                     const mid1DateFormatted = formatDate(semester?.mid1Date);
                     const mid2DateFormatted = formatDate(semester?.mid2Date);
-                    const mid1Valid = mid1DateFormatted && new Date(mid1DateFormatted) >= today;
-                    const mid2Valid = mid2DateFormatted && new Date(mid2DateFormatted) >= today;
+                    const mid1Valid = mid1DateFormatted && normalizeCalendarDate(mid1DateFormatted) >= today;
+                    const mid2Valid = mid2DateFormatted && normalizeCalendarDate(mid2DateFormatted) >= today;
                     
                     return (
                       <div className="flex gap-2 mt-3">
@@ -243,7 +268,7 @@ export default function StudentPage(){
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-slate-900">{toTitleCase(h.name)}</div>
                         <div className="text-sm text-slate-600 mt-1">
-                          {new Date(h.startDate).toLocaleDateString()} to {new Date(h.endDate).toLocaleDateString()}
+                          {formatCalendarDisplay(h.startDate)} to {formatCalendarDisplay(h.endDate)}
                         </div>
                         <div className="text-xs font-medium text-blue-700 mt-1">{days}-day{days !== 1 ? 's' : ''}</div>
                       </div>
@@ -279,7 +304,7 @@ export default function StudentPage(){
                 <div className="mt-4 space-y-2">
                   {extraHolidays.map((h, i)=>{
                     const days = calculateDays(h.startDate, h.endDate);
-                    const dateStr = `${new Date(h.startDate).toLocaleDateString()} to ${new Date(h.endDate).toLocaleDateString()}`;
+                    const dateStr = `${formatCalendarDisplay(h.startDate)} to ${formatCalendarDisplay(h.endDate)}`;
                     return (
                       <div key={`h-${i}`} className="p-3 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
@@ -304,7 +329,7 @@ export default function StudentPage(){
                   })}
                   {extraWorkingDays.map((w, i)=>{
                     const days = calculateDays(w.startDate, w.endDate);
-                    const dateStr = `${new Date(w.startDate).toLocaleDateString()} to ${new Date(w.endDate).toLocaleDateString()}`;
+                    const dateStr = `${formatCalendarDisplay(w.startDate)} to ${formatCalendarDisplay(w.endDate)}`;
                     return (
                       <div key={`w-${i}`} className="p-3 bg-red-50 border border-red-200 rounded-lg">
                         <div className="flex items-center justify-between mb-2">

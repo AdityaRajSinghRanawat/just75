@@ -50,14 +50,14 @@ app.delete('/api/semesters/:id', async (req, res) => {
 // Holidays
 app.get('/api/holidays', async (req, res) => {
   const { semesterId } = req.query;
-  const query = semesterId ? { semesterId } : {};
+  const query = semesterId ? { $or: [{ semesterId }, { semesterId: null }] } : {};
   const list = await Holiday.find(query).sort({ startDate: 1 });
   res.json(list);
 });
 
 app.post('/api/holidays', async (req, res) => {
-  const { semesterId, name, startDate, endDate } = req.body;
-  if (!semesterId || !name || !startDate || !endDate) return res.status(400).json({ message: 'All fields are required: semesterId, name, startDate, endDate' });
+  const { name, startDate, endDate } = req.body;
+  if (!name || !startDate || !endDate) return res.status(400).json({ message: 'All fields are required: name, startDate, endDate' });
   
   const s = new Date(startDate);
   const e = new Date(endDate);
@@ -65,14 +65,14 @@ app.post('/api/holidays', async (req, res) => {
   if (isNaN(s.getTime()) || isNaN(e.getTime())) return res.status(400).json({ message: 'Invalid date format' });
   if (s > e) return res.status(400).json({ message: 'Start date must be before or equal to end date' });
 
-  // prevent overlap for same semester
-  const existing = await Holiday.find({ semesterId });
+  // prevent overlap for global official holidays
+  const existing = await Holiday.find({ semesterId: null });
   for (const h of existing) {
     const aS = new Date(h.startDate), aE = new Date(h.endDate);
-    if (s <= aE && aS <= e) return res.status(400).json({ message: 'Holiday overlaps with an existing holiday for this semester' });
+    if (s <= aE && aS <= e) return res.status(400).json({ message: 'Holiday overlaps with an existing official holiday' });
   }
 
-  const hol = await Holiday.create({ semesterId, name, startDate: s, endDate: e });
+  const hol = await Holiday.create({ semesterId: null, name, startDate: s, endDate: e });
   res.status(201).json(hol);
 });
 

@@ -9,6 +9,17 @@ function toTitleCase(str){
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
 
+function formatCalendarDisplay(value){
+  if(typeof value === 'string'){
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m){
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString();
+    }
+  }
+  const d = new Date(value);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toLocaleDateString();
+}
+
 export default function AdminDashboard(){
   const { isSignedIn, user } = useUser() || {};
   const [semesters, setSemesters] = useState([]);
@@ -33,13 +44,14 @@ export default function AdminDashboard(){
       const s = await fetchSemesters();
       setSemesters(s);
     }catch(err){ }
+    try{
+      const h = await fetchHolidays();
+      setHolidays(h);
+    }catch(err){
+      setHolidays([]);
+    }
     setLoading(false);
   }
-
-  useEffect(()=>{
-    if(!selectedSemester) return setHolidays([]);
-    fetchHolidays(selectedSemester).then(setHolidays).catch(()=>setHolidays([]));
-  }, [selectedSemester]);
 
   async function handleAddSemester(payload){
     try{
@@ -63,23 +75,18 @@ export default function AdminDashboard(){
   }
 
   async function handleAddHoliday(payload){
-    if(!selectedSemester){
-      setMessage('Choose semester first');
-      setTimeout(()=>setMessage(''), 2000);
-      return;
-    }
     try{
       if(editingHoliday){
         await updateHoliday(editingHoliday._id, payload);
         setMessage('Holiday updated!');
         setEditingHoliday(null);
       }else{
-        await createHoliday({ semesterId: selectedSemester, ...payload });
+        await createHoliday(payload);
         setMessage('Holiday added!');
       }
       setShowHolidayModal(false);
       setTimeout(()=>setMessage(''), 2000);
-      const list = await fetchHolidays(selectedSemester);
+      const list = await fetchHolidays();
       setHolidays(list);
     }catch(err){
       setMessage('Failed: ' + (err?.response?.data?.message || err?.message || 'Unknown error'));
@@ -160,8 +167,6 @@ export default function AdminDashboard(){
     );
   }
 
-  const selectedSemesterName = semesters.find(s => s._id === selectedSemester)?.name || '';
-
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col">
       <Navbar showProfile={true} />
@@ -205,7 +210,7 @@ export default function AdminDashboard(){
                   <div 
                     key={s._id} 
                     onClick={()=>setSelectedSemester(s._id)}
-                    className={`p-4 rounded-lg cursor-pointer transition-all text-sm md:text-base flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${
+                    className={`p-4 rounded-lg cursor-pointer transition-all text-sm md:text-base flex items-start justify-between gap-3 ${
                       selectedSemester === s._id 
                         ? 'bg-blue-50 border-2 border-blue-600' 
                         : 'bg-slate-50 border-2 border-slate-200 hover:border-blue-300'
@@ -222,7 +227,7 @@ export default function AdminDashboard(){
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={e=>{ e.stopPropagation(); handleEditSemester(s); }}
                         className="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm px-3 py-1 hover:bg-blue-50 rounded transition-colors whitespace-nowrap">
@@ -241,47 +246,45 @@ export default function AdminDashboard(){
           </div>
 
           {/* Section 3: Manage Holidays */}
-          {selectedSemester && (
-            <div>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">Holidays for {selectedSemesterName}</h2>
-                <button 
-                  onClick={()=>{ setEditingHoliday(null); setShowHolidayModal(true); }} 
-                  className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm md:text-base">
-                  <span>+</span> Add Holiday
-                </button>
-              </div>
-
-              {holidays.length === 0 ? (
-                <div className="text-slate-500 p-4 bg-slate-50 rounded-lg text-sm md:text-base">No holidays yet for this semester.</div>
-              ) : (
-                <div className="space-y-3">
-                  {holidays.map(h => (
-                    <div key={h._id} className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 p-4 bg-slate-50 rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-slate-900 text-sm md:text-base">{toTitleCase(h.name)}</div>
-                        <div className="text-xs md:text-sm text-slate-600 mt-1">
-                          {new Date(h.startDate).toLocaleDateString()} to {new Date(h.endDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={()=>handleEditHoliday(h)}
-                          className="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm px-3 py-1 hover:bg-blue-50 rounded transition-colors whitespace-nowrap">
-                          Edit
-                        </button>
-                        <button 
-                          onClick={()=>openDeleteConfirm(h._id)}
-                          className="text-red-600 hover:text-red-700 font-medium text-xs md:text-sm px-3 py-1 hover:bg-red-50 rounded transition-colors whitespace-nowrap">
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          <div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">Official Holidays (All Semesters)</h2>
+              <button 
+                onClick={()=>{ setEditingHoliday(null); setShowHolidayModal(true); }} 
+                className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm md:text-base">
+                <span>+</span> Add Holiday
+              </button>
             </div>
-          )}
+
+            {holidays.length === 0 ? (
+              <div className="text-slate-500 p-4 bg-slate-50 rounded-lg text-sm md:text-base">No official holidays yet.</div>
+            ) : (
+              <div className="space-y-3">
+                {holidays.map(h => (
+                  <div key={h._id} className="flex items-start justify-between gap-3 p-4 bg-slate-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-900 text-sm md:text-base">{toTitleCase(h.name)}</div>
+                        <div className="text-xs md:text-sm text-slate-600 mt-1">
+                          {formatCalendarDisplay(h.startDate)} to {formatCalendarDisplay(h.endDate)}
+                        </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button 
+                        onClick={()=>handleEditHoliday(h)}
+                        className="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm px-3 py-1 hover:bg-blue-50 rounded transition-colors whitespace-nowrap">
+                        Edit
+                      </button>
+                      <button 
+                        onClick={()=>openDeleteConfirm(h._id)}
+                        className="text-red-600 hover:text-red-700 font-medium text-xs md:text-sm px-3 py-1 hover:bg-red-50 rounded transition-colors whitespace-nowrap">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       </div>

@@ -15,6 +15,7 @@ export default function StudentPage(){
   const [semesterId, setSemesterId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [hasCustomEndDate, setHasCustomEndDate] = useState(false);
   const [currentPresent, setCurrentPresent] = useState('');
   const [currentTotal, setCurrentTotal] = useState('');
   const [desiredPercent, setDesiredPercent] = useState('');
@@ -55,7 +56,7 @@ export default function StudentPage(){
   }, [semesterId, holidays.length]);
 
   useEffect(() => {
-    if(!semesterId || !semesters.length || !startDate) return;
+    if(!semesterId || !semesters.length || !startDate || hasCustomEndDate) return;
     const semester = semesters.find(s => s._id === semesterId);
     if(!semester) return;
     const today = new Date(startDate);
@@ -77,10 +78,13 @@ export default function StudentPage(){
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       defaultEndDate = nextMonth.toISOString().split('T')[0];
     }
-    if(endDate !== defaultEndDate){
-      setEndDate(defaultEndDate);
-    }
-  }, [semesterId, semesters, startDate, endDate]);
+    setEndDate(defaultEndDate);
+  }, [semesterId, semesters, startDate, hasCustomEndDate]);
+
+  useEffect(() => {
+    // Reset custom selection when semester changes
+    setHasCustomEndDate(false);
+  }, [semesterId]);
 
 
   function getFilteredHolidays(){
@@ -171,7 +175,7 @@ export default function StudentPage(){
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" 
                     type="date" 
                     value={endDate} 
-                    onChange={e => setEndDate(e.target.value)}
+                    onChange={e => { setEndDate(e.target.value); setHasCustomEndDate(true); }}
                     onFocus={e => e.target.showPicker?.()}
                   />
                   
@@ -194,7 +198,7 @@ export default function StudentPage(){
                     return (
                       <div className="flex gap-2 mt-3">
                         <button
-                          onClick={() => mid1DateFormatted && setEndDate(mid1DateFormatted)}
+                          onClick={() => { if (mid1DateFormatted) { setEndDate(mid1DateFormatted); setHasCustomEndDate(true); } }}
                           disabled={!mid1Valid}
                           className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                             mid1Valid 
@@ -208,7 +212,7 @@ export default function StudentPage(){
                         </button>
                         
                         <button
-                          onClick={() => mid2DateFormatted && setEndDate(mid2DateFormatted)}
+                          onClick={() => { if (mid2DateFormatted) { setEndDate(mid2DateFormatted); setHasCustomEndDate(true); } }}
                           disabled={!mid2Valid}
                           className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                             mid2Valid 

@@ -1,0 +1,6 @@
+.input {
+  @apply w-full px-3 py-2 border border-slate-200 rounded bg-white text-slate-800;
+}
+
+/* small helper */
+.container { @apply max-w-5xl mx-auto }

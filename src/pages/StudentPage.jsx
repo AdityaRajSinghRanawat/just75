@@ -156,9 +156,9 @@ export default function StudentPage(){
   const canShowHolidays = startDate && endDate;
 
   return (
-    <div className="bg-slate-50 flex flex-col">
+    <div className="bg-slate-50 h-full flex flex-col">
       <Navbar showProfile={false} />
-      <div className="flex-1 p-4 md:p-8">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Attendance Projection</h1>

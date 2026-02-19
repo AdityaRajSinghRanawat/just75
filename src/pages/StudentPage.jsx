@@ -7,7 +7,6 @@ import {
 import { AddExtraModal, AddHolidayModal } from "../components/Modal";
 import AppPageLayout from "../components/layout/AppPageLayout";
 import {
-  StudentIntro,
   SemesterSection,
   DateRangeSection,
   OfficialHolidaysSection,
@@ -149,21 +148,39 @@ export default function StudentPage() {
   }
 
   const filteredHolidays = getFilteredHolidays();
+  const hasAttendanceInputs =
+    String(currentPresent).trim() !== "" &&
+    String(currentTotal).trim() !== "" &&
+    String(desiredPercent).trim() !== "";
   const canShowSections = Boolean(startDate && endDate);
 
   return (
     <AppPageLayout showProfile={false} mainClassName="p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <StudentIntro />
-
+      <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-md p-6 md:p-8 space-y-8">
-          <SemesterSection
-            semesters={semesters}
-            semesterId={semesterId}
-            onSemesterChange={setSemesterId}
+          <AttendanceSection
+            showTopBorder={false}
+            currentPresent={currentPresent}
+            currentTotal={currentTotal}
+            desiredPercent={desiredPercent}
+            onPresentChange={setCurrentPresent}
+            onTotalChange={setCurrentTotal}
+            onDesiredPercentChange={setDesiredPercent}
           />
 
-          {semesterId && (
+          {hasAttendanceInputs ? (
+            <SemesterSection
+              semesters={semesters}
+              semesterId={semesterId}
+              onSemesterChange={setSemesterId}
+            />
+          ) : (
+            <div className="border-t pt-8 text-sm text-slate-500">
+              Fill attendance fields first to continue.
+            </div>
+          )}
+
+          {hasAttendanceInputs && semesterId && (
             <DateRangeSection
               semesters={semesters}
               semesterId={semesterId}
@@ -176,7 +193,7 @@ export default function StudentPage() {
             />
           )}
 
-          {canShowSections && filteredHolidays.length > 0 && (
+          {hasAttendanceInputs && canShowSections && filteredHolidays.length > 0 && (
             <OfficialHolidaysSection
               holidays={filteredHolidays}
               onEditHoliday={(holiday) => {
@@ -187,7 +204,7 @@ export default function StudentPage() {
             />
           )}
 
-          {canShowSections && (
+          {hasAttendanceInputs && canShowSections && (
             <AdjustmentsSection
               extraHolidays={extraHolidays}
               extraWorkingDays={extraWorkingDays}
@@ -216,16 +233,15 @@ export default function StudentPage() {
             />
           )}
 
-          {canShowSections && (
-            <AttendanceSection
-              currentPresent={currentPresent}
-              currentTotal={currentTotal}
-              desiredPercent={desiredPercent}
-              onPresentChange={setCurrentPresent}
-              onTotalChange={setCurrentTotal}
-              onDesiredPercentChange={setDesiredPercent}
-              onCalculate={calculate}
-            />
+          {hasAttendanceInputs && canShowSections && (
+            <div className="border-t pt-8">
+              <button
+                onClick={calculate}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Calculate Projection
+              </button>
+            </div>
           )}
 
           <ResultsSection result={result} periodsPerDay={PERIODS_PER_DAY} />

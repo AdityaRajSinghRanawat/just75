@@ -1,21 +1,25 @@
 export default function AttendanceSection({
+  showTopBorder = true,
   currentPresent,
   currentTotal,
   desiredPercent,
   onPresentChange,
   onTotalChange,
   onDesiredPercentChange,
-  onCalculate,
 }) {
   return (
-    <div className="border-t pt-8">
+    <div className={showTopBorder ? "border-t pt-8" : ""}>
       <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-4">
         Your Attendance
       </h2>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Total Present <span className="text-red-600">*</span>
+            Total{" "}
+            <span className="bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+              Present
+            </span>{" "}
+            <span className="text-red-600">*</span>
           </label>
           <input
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -28,7 +32,11 @@ export default function AttendanceSection({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Total Lectures <span className="text-red-600">*</span>
+            Total{" "}
+            <span className="bg-gradient-to-r from-blue-700 to-blue-600 bg-clip-text text-transparent">
+              Lectures
+            </span>{" "}
+            <span className="text-red-600">*</span>
           </label>
           <input
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -69,13 +77,6 @@ export default function AttendanceSection({
           </div>
         </div>
       </div>
-
-      <button
-        onClick={onCalculate}
-        className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-      >
-        Calculate Projection
-      </button>
     </div>
   );
 }

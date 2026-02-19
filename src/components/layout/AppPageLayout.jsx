@@ -7,7 +7,7 @@ export default function AppPageLayout({
   children,
 }) {
   return (
-    <div className="bg-slate-50 h-[100svh] flex flex-col">
+    <div className="bg-slate-50 h-dvh flex flex-col">
       <Navbar showProfile={showProfile} />
       <main className={`flex-1 min-h-0 overflow-y-auto ${mainClassName}`}>
         {children}

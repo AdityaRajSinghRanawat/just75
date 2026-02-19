@@ -170,7 +170,7 @@ export default function AdminDashboard(){
   return (
     <div className="bg-slate-50 flex flex-col">
       <Navbar showProfile={true} />
-      <div className="flex-1 p-4 md:p-8">
+      <div className="h-[calc(100%-10dvh)] md:flex-1 min-h-0 overflow-y-auto p-4 md:p-8">
         <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
           
           {/* Page Title */}

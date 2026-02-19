@@ -13,8 +13,8 @@ export default function Navbar({ showProfile = false }){
   }
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+    <header className="bg-white shadow-sm sticky top-0 z-40 h-[10dvh] md:h-auto">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 h-full md:h-auto py-0 md:py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img src={logo} alt="Smart Attendance" className="h-10 md:h-12 w-auto" />

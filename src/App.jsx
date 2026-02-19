@@ -11,7 +11,7 @@ function App() {
   const isAdmin = user && user.emailAddresses && user.emailAddresses[0] && adminEmails.includes(user.emailAddresses[0].emailAddress);
 
   return (
-    <div className="min-h-screen min-h-dvh bg-slate-50 text-slate-800 flex flex-col">
+    <div className="h-screen h-dvh bg-slate-50 text-slate-800 flex flex-col overflow-hidden">
       <main className="flex-1 min-h-0">
         <Routes>
           <Route path="/" element={<StudentPage />} />

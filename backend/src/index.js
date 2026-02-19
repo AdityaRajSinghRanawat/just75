@@ -9,6 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, ts: Date.now() });
+});
+
 // NOTE: simplified server for beginners — admin UI is gated by Clerk on the frontend only.
 // Server focuses on minimal, clear routes and uses models directly (no controllers/routes folders).
 

@@ -18,7 +18,7 @@ export default function AdminSignIn(){
   return (
     <div className="bg-slate-50 flex flex-col">
       <Navbar showProfile={false} />
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="h-[calc(100%-10dvh)] md:flex-1 min-h-0 overflow-y-auto flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <SignIn 
             routing="path"

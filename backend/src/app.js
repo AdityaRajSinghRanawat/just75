@@ -1,0 +1,104 @@
+const express = require('express');
+const cors = require('cors');
+const Semester = require('./models/Semester');
+const Holiday = require('./models/Holiday');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, ts: Date.now() });
+});
+
+// Semesters
+app.get('/api/semesters', async (req, res) => {
+  const list = await Semester.find().sort({ createdAt: -1 });
+  res.json(list);
+});
+
+app.get('/api/semesters/:id', async (req, res) => {
+  const s = await Semester.findById(req.params.id);
+  if (!s) return res.status(404).json({ message: 'not found' });
+  res.json(s);
+});
+
+app.post('/api/semesters', async (req, res) => {
+  const { name, mid1Date, mid2Date } = req.body;
+  if (!name) return res.status(400).json({ message: 'Semester name is required' });
+  if (mid1Date && mid2Date) {
+    const m1 = new Date(mid1Date);
+    const m2 = new Date(mid2Date);
+    if (m1 > m2) return res.status(400).json({ message: 'Mid1 date must be before Mid2 date' });
+  }
+  const sem = await Semester.create({ name, mid1Date, mid2Date });
+  res.status(201).json(sem);
+});
+
+app.put('/api/semesters/:id', async (req, res) => {
+  const updated = await Semester.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if (!updated) return res.status(404).json({ message: 'not found' });
+  res.json(updated);
+});
+
+app.delete('/api/semesters/:id', async (req, res) => {
+  await Semester.findByIdAndDelete(req.params.id);
+  res.json({ message: 'deleted' });
+});
+
+// Holidays
+app.get('/api/holidays', async (req, res) => {
+  const { semesterId } = req.query;
+  const query = semesterId ? { $or: [{ semesterId }, { semesterId: null }] } : {};
+  const list = await Holiday.find(query).sort({ startDate: 1 });
+  res.json(list);
+});
+
+app.post('/api/holidays', async (req, res) => {
+  const { name, startDate, endDate } = req.body;
+  if (!name || !startDate || !endDate) {
+    return res.status(400).json({ message: 'All fields are required: name, startDate, endDate' });
+  }
+
+  const s = new Date(startDate);
+  const e = new Date(endDate);
+
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) {
+    return res.status(400).json({ message: 'Invalid date format' });
+  }
+  if (s > e) return res.status(400).json({ message: 'Start date must be before or equal to end date' });
+
+  const existing = await Holiday.find({ semesterId: null });
+  for (const h of existing) {
+    const aS = new Date(h.startDate);
+    const aE = new Date(h.endDate);
+    if (s <= aE && aS <= e) {
+      return res.status(400).json({ message: 'Holiday overlaps with an existing official holiday' });
+    }
+  }
+
+  const hol = await Holiday.create({ semesterId: null, name, startDate: s, endDate: e });
+  res.status(201).json(hol);
+});
+
+app.put('/api/holidays/:id', async (req, res) => {
+  const { startDate, endDate, name } = req.body;
+  if (startDate && endDate) {
+    const s = new Date(startDate);
+    const e = new Date(endDate);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+    if (s > e) return res.status(400).json({ message: 'Start date must be before or equal to end date' });
+  }
+  const updated = await Holiday.findByIdAndUpdate(req.params.id, { startDate, endDate, name }, { new: true });
+  if (!updated) return res.status(404).json({ message: 'Holiday not found' });
+  res.json(updated);
+});
+
+app.delete('/api/holidays/:id', async (req, res) => {
+  await Holiday.findByIdAndDelete(req.params.id);
+  res.json({ message: 'deleted' });
+});
+
+module.exports = app;

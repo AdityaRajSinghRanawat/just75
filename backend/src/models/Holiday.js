@@ -7,4 +7,6 @@ const HolidaySchema = new mongoose.Schema({
   endDate: { type: Date, required: true }
 }, { timestamps: true });
 
+HolidaySchema.index({ semesterId: 1, startDate: 1 });
+
 module.exports = mongoose.model('Holiday', HolidaySchema);

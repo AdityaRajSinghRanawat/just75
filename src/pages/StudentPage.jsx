@@ -57,7 +57,7 @@ export default function StudentPage() {
       if (holidays.length) setHolidays([]);
       return;
     }
-    fetchHolidays()
+    fetchHolidays(semesterId)
       .then(setHolidays)
       .catch(() => setHolidays([]));
   }, [semesterId]);

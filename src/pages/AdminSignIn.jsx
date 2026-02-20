@@ -3,20 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import AppPageLayout from "../components/layout/AppPageLayout";
 import { AdminSignInPanel } from "../components/pages/admin";
+import { isAdminUser } from "../lib/auth";
 
 export default function AdminSignIn() {
   const { isSignedIn, user } = useUser() || {};
   const navigate = useNavigate();
-  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const isAdmin =
-    user &&
-    user.emailAddresses &&
-    user.emailAddresses[0] &&
-    adminEmails.includes(user.emailAddresses[0].emailAddress);
+  const isAdmin = isAdminUser(user);
 
   useEffect(() => {
     if (isSignedIn && isAdmin) {

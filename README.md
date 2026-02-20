@@ -1,67 +1,41 @@
 # Smart Attendance
 
-Smart Attendance is a lightweight attendance planning app with a small Express + MongoDB backend and a React + Vite frontend. It focuses on semester and holiday management and student attendance projection.
+Smart Attendance is a React + Vite frontend with a small Express + MongoDB API for semester and holiday planning.
 
-Core goals
-- Minimal, readable code for beginners
-- Small backend CRUD for semesters & holidays
-- Frontend admin UI gated by Clerk (frontend)
-- Pure utility functions for attendance calculations
+## Goals
+- Fast perceived performance
+- Clean and readable structure
+- Low infra complexity
 
-Features
-- Admin: create/update/delete semesters and holidays
-- Student: select semester, view official holidays, add adjustments, compute attendance projection
-- Small, explicit Mongoose models for clarity
+## What is optimized
+- Route-level code splitting in frontend (`React.lazy` + `Suspense`)
+- Shared admin auth helper (`src/lib/auth.js`) to remove duplicated logic
+- Short-lived in-memory API cache for GET calls in `src/lib/api.js`
+- Targeted holiday fetching by `semesterId` to avoid over-fetching
+- Lean MongoDB reads and indexes for high-traffic API paths
+- Optional single-service production mode: backend serves `dist/` if present
 
-Quick start (local)
-1. Copy env templates:
-	- Backend: copy `.env.example` → `backend/.env` and set `MONGODB_URI` and `PORT`.
-	- Frontend: copy `.env.example` → `.env.local` and set `VITE_API_BASE_URL` (e.g. `http://localhost:4000`) and Clerk keys if used.
-2. Install dependencies:
+## Local development
+1. Install dependencies at repo root:
 ```bash
-# from repo root
 npm install
-cd backend && npm install
 ```
-3. Start dev servers:
+2. Set env files:
+- `backend/.env`: set `MONGODB_URI`, optional `MONGODB_DB_NAME`, `PORT`
+- `.env.local`: set `VITE_API_BASE_URL` and Clerk vars if used
+3. Start app:
 ```bash
-# start frontend (vite)
-npm run dev
-
-# in another shell: start backend
-cd backend && npm run dev
+npm run dev:all
 ```
 
-API endpoints (important)
-- `GET /api/semesters` — list semesters
-- `POST /api/semesters` — create semester
-- `PUT /api/semesters/:id` — update semester
-- `DELETE /api/semesters/:id` — delete semester
-- `GET /api/holidays?semesterId=` — list holidays
-- `POST /api/holidays` — create holiday
-- `PUT /api/holidays/:id` — update holiday
-- `DELETE /api/holidays/:id` — delete holiday
+## Production (single service)
+1. Build frontend:
+```bash
+npm run build
+```
+2. Start backend:
+```bash
+npm start
+```
 
-Project layout
-- `backend/src/index.js` — Express server with routes
-- `backend/src/db.js` — Mongoose connection
-- `backend/src/models` — `Semester` and `Holiday`
-- `src/pages/AdminDashboard.jsx` — Admin UI
-- `src/pages/StudentPage.jsx` — Student UI
-- `src/components/Modal.jsx` — modal forms
-- `src/lib/api.js` — client API wrapper
-- `src/utils/calculations.js` — pure calculation helpers
-
-Cleanup performed
-- Removed deprecated placeholder controllers, routes, and a seed script that were duplicated or unused.
-- Removed deprecated frontend pages that duplicated `AdminDashboard`.
-
-Security note
-- Admin UI is gated on the frontend with Clerk but the server currently lacks server-side admin verification. Add server-side checks before using in production.
-
-Next steps I can help with
-- Add server-side admin protection (Clerk middleware)
-- Split large components (e.g. `Modal.jsx`) into smaller files for readability
-- Add a safe, idempotent seed script to populate sample data
-
-If you want me to proceed with any of the above, tell me which task to prioritize.
+When `NODE_ENV=production` and `dist/` exists, Express serves frontend and API from one process.

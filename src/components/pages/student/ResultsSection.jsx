@@ -4,7 +4,7 @@ export default function ResultsSection({ result, periodsPerDay }) {
   if (!result) return null;
 
   return (
-    <div className="border-t pt-8 bg-blue-50 border-blue-200 rounded-lg p-6 -mx-8 -mb-8 px-8">
+    <div className="result-entry-animation border-t pt-8 bg-blue-50 border-blue-200 rounded-lg p-6 -mx-8 -mb-8 px-8">
       <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-4">
         Your Results
       </h2>

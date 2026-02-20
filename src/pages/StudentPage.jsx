@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchSemesters, fetchHolidays } from "../lib/api";
 import {
   calculateNetWorkingDays,
@@ -38,6 +38,7 @@ export default function StudentPage() {
   const [editingAdjustment, setEditingAdjustment] = useState(null);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const [result, setResult] = useState(null);
+  const resultSectionRef = useRef(null);
 
   useEffect(() => {
     const today = toLocalDateInputValue();
@@ -142,6 +143,14 @@ export default function StudentPage() {
     setResult(proj);
   }
 
+  useEffect(() => {
+    if (!result || !resultSectionRef.current) return;
+    resultSectionRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [result]);
+
   function handleRemoveOfficialHoliday(id) {
     if (!id) return;
     setHolidays((prev) => prev.filter((h) => h._id !== id));
@@ -244,7 +253,11 @@ export default function StudentPage() {
             </div>
           )}
 
-          <ResultsSection result={result} periodsPerDay={PERIODS_PER_DAY} />
+          <ResultsSection
+            result={result}
+            periodsPerDay={PERIODS_PER_DAY}
+            sectionRef={resultSectionRef}
+          />
         </div>
       </div>
 

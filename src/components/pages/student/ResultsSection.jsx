@@ -1,10 +1,25 @@
+import { useEffect, useState } from "react";
 import { formatPeriods } from "./studentPageUtils";
 
-export default function ResultsSection({ result, periodsPerDay }) {
+export default function ResultsSection({ result, periodsPerDay, sectionRef }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!result) return;
+    setIsVisible(false);
+    const frameId = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(frameId);
+  }, [result]);
+
   if (!result) return null;
 
   return (
-    <div className="border-t pt-8 bg-blue-50 border-blue-200 rounded-lg p-6 -mx-8 -mb-8 px-8">
+    <div
+      ref={sectionRef}
+      className={`border-t pt-8 bg-blue-50 border-blue-200 rounded-lg p-6 -mx-8 -mb-8 px-8 transform transition-all duration-500 ease-out ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
       <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-4">
         Your Results
       </h2>

@@ -1,42 +1,23 @@
-import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
-import { isAdminUser } from "./lib/auth";
-
-const StudentPage = lazy(() => import("./pages/StudentPage"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminSignIn = lazy(() => import("./pages/AdminSignIn"));
+import { Routes, Route, Navigate } from 'react-router-dom'
+import StudentPage from './pages/StudentPage'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminSignIn from './pages/AdminSignIn'
+import { useUser } from '@clerk/clerk-react'
 
 function App() {
   const { isSignedIn, user } = useUser() || {};
-  const isAdmin = isAdminUser(user);
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const isAdmin = user && user.emailAddresses && user.emailAddresses[0] && adminEmails.includes(user.emailAddresses[0].emailAddress);
 
   return (
     <div className="bg-slate-50 text-slate-800">
-      <Suspense
-        fallback={
-          <div className="min-h-dvh grid place-items-center">
-            <p className="text-sm text-slate-500">Loading...</p>
-          </div>
-        }
-      >
-        <Routes>
-          <Route path="/" element={<StudentPage />} />
-          <Route path="/admin" element={<AdminSignIn />} />
-          <Route
-            path="/admin/dashboard"
-            element={
-              isSignedIn && isAdmin ? (
-                <AdminDashboard />
-              ) : (
-                <Navigate to="/admin" replace />
-              )
-            }
-          />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/" element={<StudentPage />} />
+        <Route path="/admin" element={<AdminSignIn />} />
+        <Route path="/admin/dashboard" element={isSignedIn && isAdmin ? <AdminDashboard /> : <Navigate to="/admin" replace />} />
+      </Routes>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

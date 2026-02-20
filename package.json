@@ -8,10 +8,8 @@
     "dev:server": "nodemon backend/src/index.js --watch backend",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
-    "build:app": "npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node backend/src/index.js",
     "start:server": "node backend/src/index.js"
   },
   "dependencies": {

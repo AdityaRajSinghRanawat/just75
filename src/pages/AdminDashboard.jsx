@@ -40,23 +40,27 @@ export default function AdminDashboard() {
   const [showSemesterDeleteConfirm, setShowSemesterDeleteConfirm] = useState(false);
   const [semesterDeleteTarget, setSemesterDeleteTarget] = useState(null);
 
-  async function load() {
-    setLoading(true);
-    const [semestersResult, holidaysResult] = await Promise.allSettled([
-      fetchSemesters(),
-      fetchHolidays(selectedSemester || undefined),
-    ]);
-
-    setSemesters(
-      semestersResult.status === "fulfilled" ? semestersResult.value : [],
-    );
-    setHolidays(holidaysResult.status === "fulfilled" ? holidaysResult.value : []);
-    setLoading(false);
-  }
-
   useEffect(() => {
     load();
   }, []);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const semestersList = await fetchSemesters();
+      setSemesters(semestersList);
+    } catch (err) {
+      setSemesters([]);
+    }
+
+    try {
+      const holidaysList = await fetchHolidays();
+      setHolidays(holidaysList);
+    } catch (err) {
+      setHolidays([]);
+    }
+    setLoading(false);
+  }
 
   async function handleAddSemester(payload) {
     try {
@@ -94,7 +98,7 @@ export default function AdminDashboard() {
       }
       setShowHolidayModal(false);
       setTimeout(() => setMessage(""), 2000);
-      const list = await fetchHolidays(selectedSemester || undefined);
+      const list = await fetchHolidays();
       setHolidays(list);
     } catch (err) {
       setMessage(
@@ -105,13 +109,6 @@ export default function AdminDashboard() {
       setShowHolidayModal(false);
     }
   }
-
-  useEffect(() => {
-    if (!selectedSemester) return;
-    fetchHolidays(selectedSemester)
-      .then(setHolidays)
-      .catch(() => setHolidays([]));
-  }, [selectedSemester]);
 
   async function handleDeleteHoliday() {
     if (!deleteTarget) return;

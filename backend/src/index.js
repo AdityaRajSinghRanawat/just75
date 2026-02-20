@@ -1,8 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 const connectDB = require('./db');
 const Semester = require('./models/Semester');
 const Holiday = require('./models/Holiday');
@@ -20,12 +18,12 @@ app.get('/api/health', (req, res) => {
 
 // Semesters
 app.get('/api/semesters', async (req, res) => {
-  const list = await Semester.find().sort({ createdAt: -1 }).lean();
+  const list = await Semester.find().sort({ createdAt: -1 });
   res.json(list);
 });
 
 app.get('/api/semesters/:id', async (req, res) => {
-  const s = await Semester.findById(req.params.id).lean();
+  const s = await Semester.findById(req.params.id);
   if (!s) return res.status(404).json({ message: 'not found' });
   res.json(s);
 });
@@ -57,7 +55,7 @@ app.delete('/api/semesters/:id', async (req, res) => {
 app.get('/api/holidays', async (req, res) => {
   const { semesterId } = req.query;
   const query = semesterId ? { $or: [{ semesterId }, { semesterId: null }] } : {};
-  const list = await Holiday.find(query).sort({ startDate: 1 }).lean();
+  const list = await Holiday.find(query).sort({ startDate: 1 });
   res.json(list);
 });
 
@@ -99,18 +97,6 @@ app.delete('/api/holidays/:id', async (req, res) => {
   await Holiday.findByIdAndDelete(req.params.id);
   res.json({ message: 'deleted' });
 });
-
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.resolve(__dirname, '../../dist');
-  if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api/')) return next();
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-}
 
 const PORT = process.env.PORT || 4000;
 

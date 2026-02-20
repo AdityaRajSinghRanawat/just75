@@ -1,17 +1,1 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
-
-@keyframes result-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.result-entry-animation {
-  animation: result-slide-in 420ms ease-out;
-}

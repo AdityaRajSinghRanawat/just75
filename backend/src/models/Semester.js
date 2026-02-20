@@ -6,6 +6,4 @@ const SemesterSchema = new mongoose.Schema({
   mid2Date: { type: Date }
 }, { timestamps: true });
 
-SemesterSchema.index({ createdAt: -1 });
-
 module.exports = mongoose.model('Semester', SemesterSchema);

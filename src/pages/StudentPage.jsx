@@ -38,6 +38,7 @@ export default function StudentPage() {
   const [editingAdjustment, setEditingAdjustment] = useState(null);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const [result, setResult] = useState(null);
+  const dateRangeSectionRef = useRef(null);
   const resultSectionRef = useRef(null);
 
   useEffect(() => {
@@ -151,6 +152,14 @@ export default function StudentPage() {
     });
   }, [result]);
 
+  useEffect(() => {
+    if (!semesterId || !dateRangeSectionRef.current) return;
+    dateRangeSectionRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [semesterId]);
+
   function handleRemoveOfficialHoliday(id) {
     if (!id) return;
     setHolidays((prev) => prev.filter((h) => h._id !== id));
@@ -190,16 +199,18 @@ export default function StudentPage() {
           )}
 
           {hasAttendanceInputs && semesterId && (
-            <DateRangeSection
-              semesters={semesters}
-              semesterId={semesterId}
-              startDate={startDate}
-              endDate={endDate}
-              onEndDateChange={(value) => {
-                setEndDate(value);
-                setHasCustomEndDate(true);
-              }}
-            />
+            <div ref={dateRangeSectionRef}>
+              <DateRangeSection
+                semesters={semesters}
+                semesterId={semesterId}
+                startDate={startDate}
+                endDate={endDate}
+                onEndDateChange={(value) => {
+                  setEndDate(value);
+                  setHasCustomEndDate(true);
+                }}
+              />
+            </div>
           )}
 
           {hasAttendanceInputs && canShowSections && filteredHolidays.length > 0 && (

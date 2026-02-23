@@ -116,10 +116,22 @@ export default function StudentPage() {
     if (!semesterId || !startDate || !endDate || !currentTotal) return;
 
     const filteredHolidays = getFilteredHolidays();
+    const semester = semesters.find((s) => s._id === semesterId);
+    const mid1Date = semester?.mid1Date
+      ? toLocalDateInputValue(normalizeCalendarDate(semester.mid1Date))
+      : null;
+    const mid2Date = semester?.mid2Date
+      ? toLocalDateInputValue(normalizeCalendarDate(semester.mid2Date))
+      : null;
+    const isExamDayEndDate = endDate === mid1Date || endDate === mid2Date;
+
     const extraHolArray = extraHolidays.map((h) => ({
       startDate: h.startDate,
       endDate: h.endDate,
     }));
+    if (isExamDayEndDate) {
+      extraHolArray.push({ startDate: endDate, endDate });
+    }
     const extraWorkArray = extraWorkingDays.map((w) => ({
       startDate: w.startDate,
       endDate: w.endDate,

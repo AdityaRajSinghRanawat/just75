@@ -35,7 +35,6 @@ export default function DateRangeSection({
             value={startDate}
             disabled
           />
-          <p className="text-xs text-slate-500 mt-1">Today's date (read-only)</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -48,10 +47,6 @@ export default function DateRangeSection({
             onChange={(e) => onEndDateChange(e.target.value)}
             onFocus={(e) => e.target.showPicker?.()}
           />
-          <p className="text-xs text-slate-500 mt-1">
-            End date is excluded from the calculation window.
-          </p>
-
           <div className="flex gap-2 mt-3">
             <button
               onClick={() => mid1DateFormatted && onEndDateChange(mid1DateFormatted)}

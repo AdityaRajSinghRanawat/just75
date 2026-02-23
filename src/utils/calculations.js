@@ -68,15 +68,16 @@ export function countBaseWorkingDays(start, end, officialHolidays = [], includeE
 }
 
 export function calculateNetWorkingDays({ startDate, endDate, officialHolidays = [], extraHolidays = [], extraWorkingDays = [] }) {
-  // Study window is [startDate, endDate): exam/end date is excluded.
+  // Study window is inclusive: [startDate, endDate].
   const periodStart = toDate(startDate);
   const periodEnd = toDate(endDate);
-  const base = countBaseWorkingDays(periodStart, periodEnd, officialHolidays, false);
+  const periodEndExclusive = addDays(periodEnd, 1);
+  const base = countBaseWorkingDays(periodStart, periodEnd, officialHolidays, true);
 
   let extraH = 0;
   for (const h of extraHolidays) {
     const overlapStart = maxDate(toDate(h.startDate), periodStart);
-    const overlapEndExclusive = minDate(addDays(toDate(h.endDate), 1), periodEnd);
+    const overlapEndExclusive = minDate(addDays(toDate(h.endDate), 1), periodEndExclusive);
     if (overlapStart >= overlapEndExclusive) continue;
     extraH += countBaseWorkingDays(overlapStart, overlapEndExclusive, [], false);
   }
@@ -84,7 +85,7 @@ export function calculateNetWorkingDays({ startDate, endDate, officialHolidays =
   let extraW = 0;
   for (const w of extraWorkingDays) {
     const overlapStart = maxDate(toDate(w.startDate), periodStart);
-    const overlapEndExclusive = minDate(addDays(toDate(w.endDate), 1), periodEnd);
+    const overlapEndExclusive = minDate(addDays(toDate(w.endDate), 1), periodEndExclusive);
     if (overlapStart >= overlapEndExclusive) continue;
     extraW += countBaseWorkingDays(overlapStart, overlapEndExclusive, [], false);
   }

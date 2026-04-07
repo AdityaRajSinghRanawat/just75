@@ -3,7 +3,7 @@ import { useUser, useClerk } from '@clerk/clerk-react'
 import { useState } from 'react'
 import logo from '../logo/logo.png'
 
-export default function Navbar({ showProfile = false }){
+export default function Navbar({ showProfile = false, rightContent = null }){
   const { user } = useUser() || {};
   const { signOut } = useClerk();
   const [showMenu, setShowMenu] = useState(false);
@@ -48,6 +48,10 @@ export default function Navbar({ showProfile = false }){
                 </button>
               </div>
             )}
+          </div>
+        ) : rightContent ? (
+          <div className="text-sm md:text-base font-medium text-slate-700">
+            {rightContent}
           </div>
         ) : null}
       </div>

@@ -24,4 +24,19 @@ export async function createHoliday(payload){ return request('/api/holidays', { 
 export async function updateHoliday(id, payload){ return request(`/api/holidays/${id}`, { method: 'PUT', body: JSON.stringify(payload) }); }
 export async function deleteHoliday(id){ return request(`/api/holidays/${id}`, { method: 'DELETE' }); }
 
+export async function pingActiveUser(clientId){
+  return request('/api/active-users/ping', {
+    method: 'POST',
+    body: JSON.stringify({ clientId }),
+  });
+}
+
+export async function fetchActiveUsers24h(){
+  return request('/api/active-users/24h');
+}
+
+export async function fetchActiveUsersSummary(){
+  return request('/api/active-users/summary');
+}
+
 export default { request };

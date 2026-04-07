@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchSemesters, fetchHolidays } from "../lib/api";
+import {
+  fetchSemesters,
+  fetchHolidays,
+  pingActiveUser,
+  fetchActiveUsers24h,
+} from "../lib/api";
 import {
   calculateNetWorkingDays,
   computeProjection,
@@ -38,8 +43,33 @@ export default function StudentPage() {
   const [editingAdjustment, setEditingAdjustment] = useState(null);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const [result, setResult] = useState(null);
+  const [usersLast24h, setUsersLast24h] = useState(null);
   const dateRangeSectionRef = useRef(null);
   const resultSectionRef = useRef(null);
+
+  useEffect(() => {
+    const storageKey = "student_client_id";
+    let clientId = localStorage.getItem(storageKey);
+    if (!clientId) {
+      clientId =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `client_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(storageKey, clientId);
+    }
+
+    pingActiveUser(clientId)
+      .then((data) => setUsersLast24h(data?.active24h ?? null))
+      .catch(() => setUsersLast24h(null));
+
+    const refreshTimer = setInterval(() => {
+      fetchActiveUsers24h()
+        .then((data) => setUsersLast24h(data?.count ?? 0))
+        .catch(() => {});
+    }, 30000);
+
+    return () => clearInterval(refreshTimer);
+  }, []);
 
   useEffect(() => {
     const today = toLocalDateInputValue();
@@ -185,7 +215,24 @@ export default function StudentPage() {
   const canShowSections = Boolean(startDate && endDate);
 
   return (
-    <AppPageLayout showProfile={false} mainClassName="p-4 md:p-8">
+    <AppPageLayout
+      showProfile={false}
+      rightContent={
+        <span className="inline-flex items-center gap-2 rounded-full bg-white text-slate-800 px-3 py-1.5 shadow-xs border border-slate-300">
+          <span className="relative inline-flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+          </span>
+          <span className="text-xs md:text-sm tracking-wide">
+            Users 24h
+          </span>
+          <span className="rounded-md bg-blue-50 text-blue-700 px-2 py-0.5 text-xs md:text-sm font-semibold border border-blue-100">
+            {usersLast24h ?? "--"}
+          </span>
+        </span>
+      }
+      mainClassName="p-4 md:p-8"
+    >
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-md p-6 md:p-8 space-y-8">
           <AttendanceSection

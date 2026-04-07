@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./db');
 const Semester = require('./models/Semester');
 const Holiday = require('./models/Holiday');
+const ActiveUser = require('./models/ActiveUser');
 
 const app = express();
 app.use(cors());
@@ -96,6 +97,48 @@ app.put('/api/holidays/:id', async (req, res) => {
 app.delete('/api/holidays/:id', async (req, res) => {
   await Holiday.findByIdAndDelete(req.params.id);
   res.json({ message: 'deleted' });
+});
+
+// Active users (rolling 24h)
+app.post('/api/active-users/ping', async (req, res) => {
+  const { clientId } = req.body || {};
+  const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  const userAgent = req.headers['user-agent'] || '';
+  const identifier = String(clientId || `${ip}|${userAgent}`).slice(0, 300);
+
+  await ActiveUser.findOneAndUpdate(
+    { identifier },
+    {
+      $set: {
+        lastSeen: new Date(),
+        userAgent,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [active24h, totalUsers] = await Promise.all([
+    ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } }),
+    ActiveUser.countDocuments({}),
+  ]);
+
+  res.json({ ok: true, active24h, totalUsers });
+});
+
+app.get('/api/active-users/24h', async (req, res) => {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const count = await ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } });
+  res.json({ count });
+});
+
+app.get('/api/active-users/summary', async (req, res) => {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [active24h, totalUsers] = await Promise.all([
+    ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } }),
+    ActiveUser.countDocuments({}),
+  ]);
+  res.json({ active24h, totalUsers });
 });
 
 const PORT = process.env.PORT || 4000;

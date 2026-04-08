@@ -99,46 +99,42 @@ app.delete('/api/holidays/:id', async (req, res) => {
   res.json({ message: 'deleted' });
 });
 
-// Active users (rolling 24h)
+// Page visits (rolling 24h)
 app.post('/api/active-users/ping', async (req, res) => {
   const { clientId } = req.body || {};
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
   const userAgent = req.headers['user-agent'] || '';
-  const identifier = String(clientId || `${ip}|${userAgent}`).slice(0, 300);
+  const identifierBase = String(clientId || `${ip}|${userAgent}`).slice(0, 220);
+  const identifier = `${identifierBase}|${Date.now()}|${Math.random().toString(36).slice(2, 10)}`.slice(0, 300);
 
-  await ActiveUser.findOneAndUpdate(
-    { identifier },
-    {
-      $set: {
-        lastSeen: new Date(),
-        userAgent,
-      },
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
-  );
+  await ActiveUser.create({
+    identifier,
+    lastSeen: new Date(),
+    userAgent,
+  });
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [active24h, totalUsers] = await Promise.all([
+  const [pageVisits24h, totalPageVisits] = await Promise.all([
     ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } }),
     ActiveUser.countDocuments({}),
   ]);
 
-  res.json({ ok: true, active24h, totalUsers });
+  res.json({ ok: true, pageVisits24h, totalPageVisits });
 });
 
 app.get('/api/active-users/24h', async (req, res) => {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const count = await ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } });
-  res.json({ count });
+  res.json({ count, pageVisits24h: count });
 });
 
 app.get('/api/active-users/summary', async (req, res) => {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [active24h, totalUsers] = await Promise.all([
+  const [pageVisits24h, totalPageVisits] = await Promise.all([
     ActiveUser.countDocuments({ lastSeen: { $gte: cutoff } }),
     ActiveUser.countDocuments({}),
   ]);
-  res.json({ active24h, totalUsers });
+  res.json({ pageVisits24h, totalPageVisits });
 });
 
 const PORT = process.env.PORT || 4000;

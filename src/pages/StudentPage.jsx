@@ -25,6 +25,7 @@ import {
 } from "../components/pages/student/studentPageUtils";
 
 const PERIODS_PER_DAY = 6;
+let visitPingSentForThisLoad = false;
 
 export default function StudentPage() {
   const [semesters, setSemesters] = useState([]);
@@ -43,11 +44,14 @@ export default function StudentPage() {
   const [editingAdjustment, setEditingAdjustment] = useState(null);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const [result, setResult] = useState(null);
-  const [usersLast24h, setUsersLast24h] = useState(null);
+  const [pageVisitsLast24h, setPageVisitsLast24h] = useState(0);
   const dateRangeSectionRef = useRef(null);
   const resultSectionRef = useRef(null);
 
   useEffect(() => {
+    if (visitPingSentForThisLoad) return;
+    visitPingSentForThisLoad = true;
+
     const storageKey = "student_client_id";
     let clientId = localStorage.getItem(storageKey);
     if (!clientId) {
@@ -59,12 +63,16 @@ export default function StudentPage() {
     }
 
     pingActiveUser(clientId)
-      .then((data) => setUsersLast24h(data?.active24h ?? null))
-      .catch(() => setUsersLast24h(null));
+      .then((data) =>
+        setPageVisitsLast24h(data?.pageVisits24h ?? data?.count ?? 0),
+      )
+      .catch(() => setPageVisitsLast24h(0));
 
     const refreshTimer = setInterval(() => {
       fetchActiveUsers24h()
-        .then((data) => setUsersLast24h(data?.count ?? 0))
+        .then((data) =>
+          setPageVisitsLast24h(data?.pageVisits24h ?? data?.count ?? 0),
+        )
         .catch(() => {});
     }, 30000);
 
@@ -224,10 +232,10 @@ export default function StudentPage() {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
           </span>
           <span className="text-xs md:text-sm tracking-wide">
-            Users 24h
+            Page visits 24h
           </span>
           <span className="rounded-md bg-blue-50 text-blue-700 px-2 py-0.5 text-xs md:text-sm font-semibold border border-blue-100">
-            {usersLast24h ?? "--"}
+            {pageVisitsLast24h ?? "--"}
           </span>
         </span>
       }
